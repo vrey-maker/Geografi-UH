@@ -1,0 +1,483 @@
+﻿<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Geo-Challenge: Dinamika Litosfer</title>
+  <style>
+    :root {
+      --primary: #4a90e2;
+      --secondary: #f5f7fa;
+      --text: #333;
+      --accent: #27ae60;
+      --error: #e74c3c;
+      --border: #e6e6e6;
+    }
+
+
+    * {
+      box-sizing: border-box;
+    }
+
+
+    body {
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--secondary);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      padding: 20px;
+      margin: 0;
+    }
+
+
+    .container {
+      width: 100%;
+      max-width: 700px;
+      background: white;
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+    }
+
+
+    h1,
+    h2,
+    h3 {
+      text-align: center;
+      color: var(--primary);
+      margin-top: 0;
+    }
+
+
+    .hidden {
+      display: none;
+    }
+
+
+    .input-group {
+      margin: 20px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+
+    input[type="text"] {
+      padding: 12px;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      font-size: 16px;
+      outline: none;
+    }
+
+
+    input[type="text"]:focus {
+      border-color: var(--primary);
+    }
+
+
+    button {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: 0.3s;
+    }
+
+
+    button:hover {
+      opacity: 0.9;
+      transform: translateY(-2px);
+    }
+
+
+    .quiz-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      font-weight: bold;
+    }
+
+
+    .question {
+      font-size: 1.2rem;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+
+
+    .options {
+      display: grid;
+      gap: 10px;
+    }
+
+
+    .opt-btn {
+      background: #fff;
+      border: 2px solid var(--border);
+      text-align: left;
+      padding: 15px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: 0.2s;
+      color: var(--text);
+    }
+
+
+    .opt-btn:hover {
+      border-color: var(--primary);
+      background: #f0f7ff;
+    }
+
+
+    textarea {
+      width: 100%;
+      height: 120px;
+      padding: 10px;
+      border-radius: 8px;
+      border: 2px solid #ddd;
+      resize: vertical;
+      font-family: inherit;
+    }
+
+
+    textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+
+    th,
+    td {
+      padding: 12px;
+      border-bottom: 1px solid #eee;
+      text-align: left;
+    }
+
+
+    .rank {
+      font-weight: bold;
+      color: var(--primary);
+    }
+
+
+    .center {
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="login-screen">
+      <h1>🌍 GeoChallenge</h1>
+      <p class="center">Uji analisismu tentang Dinamika Geosfer!</p>
+
+
+      <div class="input-group">
+        <label for="username">Masukkan Nama Lengkap:</label>
+        <input type="text" id="username" placeholder="Contoh: Andi Wijaya" />
+      </div>
+
+
+      <button onclick="startQuiz()" style="width: 100%;">Mulai Kuis</button>
+    </div>
+
+
+    <div id="quiz-screen" class="hidden">
+      <div class="quiz-header">
+        <span id="progress">Soal 1/25</span>
+        <span id="score-display">Skor: 0</span>
+      </div>
+
+
+      <div id="question-container">
+        <p class="question" id="q-text">Loading...</p>
+
+
+        <div class="options" id="opt-container"></div>
+
+
+        <div id="essay-container" class="hidden">
+          <textarea id="essay-answer" placeholder="Ketik jawaban analisismu di sini..."></textarea>
+          <button onclick="nextQuestion()" style="margin-top: 10px;">Simpan & Lanjut</button>
+        </div>
+      </div>
+    </div>
+
+
+    <div id="result-screen" class="hidden">
+      <h2>Kuis Selesai! 🎉</h2>
+      <p id="final-score" class="center" style="font-size: 1.5rem; font-weight: bold;"></p>
+      <hr />
+
+
+      <h3>🏆 Leaderboard (Top 5)</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Nama</th>
+            <th>Skor</th>
+          </tr>
+        </thead>
+        <tbody id="leaderboard-body"></tbody>
+      </table>
+
+
+      <button onclick="location.reload()" style="width: 100%; margin-top: 20px; background: var(--accent);">
+        Main Lagi
+      </button>
+    </div>
+  </div>
+
+
+  <script>
+    const questions = [
+      {
+        q: "Jika sebuah wilayah mengalami kenaikan daratan sehingga permukaan laut seolah-olah turun, fenomena ini disebut...",
+        options: ["Epirogenetik Positif", "Epirogenetik Negatif", "Orogenetik", "Vulkanisme", "Seisme"],
+        correct: 1
+      },
+      {
+        q: "Puncak lipatan pada struktur batuan yang melengkung ke atas akibat tekanan horizontal disebut...",
+        options: ["Sinklinal", "Horst", "Graben", "Antiklinal", "Sesar"],
+        correct: 3
+      },
+      {
+        q: "Bagian kerak bumi yang turun akibat patahan disebut...",
+        options: ["Horst", "Graben", "Dekstral", "Sinistral", "Antiklinal"],
+        correct: 1
+      },
+      {
+        q: "Magma yang menyusup di antara dua lapisan batuan secara mendatar dan tipis disebut...",
+        options: ["Batolit", "Lakolit", "Sill", "Diatrema", "Dike"],
+        correct: 2
+      },
+      {
+        q: "Gunung api di Indonesia umumnya berbentuk Strato. Hal ini disebabkan oleh...",
+        options: ["Lava yang sangat encer", "Erupsi efusif terus-menerus", "Campuran erupsi efusif dan eksplosif", "Ledakan yang hanya terjadi sekali", "Tekanan gas yang sangat rendah"],
+        correct: 2
+      },
+      {
+        q: "Faktor utama yang membedakan pelapukan kimiawi dengan pelapukan mekanik adalah...",
+        options: ["Perubahan struktur kimia batuan", "Ukuran batuan hasil pelapukan", "Waktu yang dibutuhkan", "Lokasi terjadinya pelapukan", "Jenis batuan induk"],
+        correct: 0
+      },
+      {
+        q: "Horizon tanah yang mengandung paling banyak bahan organik dan merupakan lapisan paling subur adalah...",
+        options: ["Horizon A", "Horizon B", "Horizon C", "Horizon O", "Horizon R"],
+        correct: 3
+      },
+      {
+        q: "Manakah yang merupakan contoh metode konservasi tanah secara vegetatif?",
+        options: ["Pembuatan terasering", "Pembuatan cekdam", "Pemberian zat kapur", "Crop Rotation (Rotasi Tanaman)", "Pembuatan guludan"],
+        correct: 3
+      },
+      {
+        q: "Batu marmer merupakan hasil perubahan dari batu kapur yang mengalami suhu tinggi. Batu ini termasuk jenis...",
+        options: ["Batuan Sedimen", "Batuan Beku Luar", "Batuan Metamorf Kontak", "Batuan Metamorf Dinamo", "Batuan Beku Dalam"],
+        correct: 2
+      },
+      {
+        q: "Erosi yang disebabkan oleh pengikisan air laut terhadap pantai disebut...",
+        options: ["Ablasi", "Abrasi", "Eksarasi", "Deflasi", "Korasi"],
+        correct: 1
+      },
+      {
+        q: "Alat pengukur getaran gempa bumi disebut...",
+        options: ["Barometer", "Hygrometer", "Seismograf", "Anemometer", "Termometer"],
+        correct: 2
+      },
+      {
+        q: "Suhu tinggi di mantel bumi (1000°C-3000°C) menyebabkan material bersifat plastis yang memicu...",
+        options: ["Pembekuan magma", "Pergerakan lempeng tektonik", "Terbentuknya stalaktit", "Pelapukan organik", "Sedimentasi aeolis"],
+        correct: 1
+      },
+      {
+        q: "Tanah yang berasal dari endapan material sungai disebut...",
+        options: ["Tanah Andosol", "Tanah Aluvial", "Tanah Laterit", "Tanah Gambut", "Tanah Kapur"],
+        correct: 1
+      },
+      {
+        q: "Proses pengangkatan daratan yang sangat cepat pada wilayah yang sempit disebut gerak...",
+        options: ["Epirogenetik", "Orogenetik", "Vulkanik", "Eksogen", "Denudasi"],
+        correct: 1
+      },
+      {
+        q: "Garis yang menghubungkan tempat-tempat dengan tingkat kerusakan gempa yang sama disebut...",
+        options: ["Homoseista", "Pleistoseista", "Isoseista", "Hiposentrum", "Episentrum"],
+        correct: 2
+      },
+      {
+        q: "Pelapukan yang terjadi akibat akar pohon yang masuk ke sela batuan disebut...",
+        options: ["Fisik", "Kimiawi", "Biologi", "Mekanik", "Oksidasi"],
+        correct: 2
+      },
+      {
+        q: "Danau kawah yang terbentuk akibat letusan gunung api yang sangat besar (eksplosif) disebut tipe...",
+        options: ["Strato", "Maar", "Perisai", "Perret", "Pelee"],
+        correct: 1
+      },
+      {
+        q: "Upaya pencegahan erosi dengan membuat gundukan tanah sejajar kontur disebut...",
+        options: ["Terasering", "Cekdam", "Guludan", "Reboisasi", "Pemberian Kapur"],
+        correct: 2
+      },
+      {
+        q: "Batuan yang terbentuk dari pendinginan magma di dalam kulit bumi disebut...",
+        options: ["Batuan Beku Dalam", "Batuan Beku Luar", "Batuan Sedimen", "Batuan Metamorf", "Batuan Klastik"],
+        correct: 0
+      },
+      {
+        q: "Bahan organik dalam tanah sangat penting karena...",
+        options: ["Memperkeras struktur tanah", "Menyediakan nutrisi bagi tanaman", "Mempercepat erosi", "Menurunkan suhu tanah", "Mengubah warna batuan induk"],
+        correct: 1
+      },
+
+
+      { q: "Sebutkan dan jelaskan 5 faktor pembentuk tanah (Pedogenesis)!", type: "essay" },
+      { q: "Apa perbedaan mendasar antara intrusi magma dan ekstrusi magma?", type: "essay" },
+      { q: "Hitunglah jarak episentrum gempa jika gelombang Primer (P) datang pukul 10.20'15\" dan gelombang Sekunder (S) datang pukul 10.24'45\"! (Gunakan Rumus Laska)", type: "essay" },
+      { q: "Jelaskan mengapa Indonesia memiliki banyak gunung api aktif dikaitkan dengan letak tektoniknya!", type: "essay" },
+      { q: "Bagaimana cara kerja metode konservasi tanah secara mekanik 'Terasering' dalam mengurangi erosi?", type: "essay" }
+    ];
+
+
+    let currentQ = 0;
+    let score = 0;
+    let playerName = "";
+
+
+    function startQuiz() {
+      const nameInput = document.getElementById("username").value.trim();
+
+
+      if (!nameInput) {
+        alert("Masukkan nama dulu ya!");
+        return;
+      }
+
+
+      playerName = nameInput;
+      document.getElementById("login-screen").classList.add("hidden");
+      document.getElementById("quiz-screen").classList.remove("hidden");
+      showQuestion();
+    }
+
+
+    function showQuestion() {
+      const q = questions[currentQ];
+
+
+      document.getElementById("progress").innerText = `Soal ${currentQ + 1}/${questions.length}`;
+      document.getElementById("score-display").innerText = `Skor: ${score}`;
+      document.getElementById("q-text").innerText = q.q;
+
+
+      const optContainer = document.getElementById("opt-container");
+      const essayContainer = document.getElementById("essay-container");
+
+
+      optContainer.innerHTML = "";
+
+
+      if (q.type === "essay") {
+        optContainer.classList.add("hidden");
+        essayContainer.classList.remove("hidden");
+      } else {
+        optContainer.classList.remove("hidden");
+        essayContainer.classList.add("hidden");
+
+
+        q.options.forEach((opt, index) => {
+          const btn = document.createElement("button");
+          btn.className = "opt-btn";
+          btn.innerText = opt;
+          btn.onclick = () => checkAnswer(index);
+          optContainer.appendChild(btn);
+        });
+      }
+    }
+
+
+    function checkAnswer(selected) {
+      if (selected === questions[currentQ].correct) {
+        score += 4;
+      }
+
+
+      nextQuestion();
+    }
+
+
+    function nextQuestion() {
+      if (questions[currentQ].type === "essay") {
+        score += 4; // demo saja
+      }
+
+
+      currentQ++;
+
+
+      if (currentQ < questions.length) {
+        showQuestion();
+      } else {
+        finishQuiz();
+      }
+    }
+
+
+    function finishQuiz() {
+      document.getElementById("quiz-screen").classList.add("hidden");
+      document.getElementById("result-screen").classList.remove("hidden");
+      document.getElementById("final-score").innerText = `Skor Kamu: ${score}`;
+
+
+      saveToLeaderboard();
+      displayLeaderboard();
+    }
+
+
+    function saveToLeaderboard() {
+      let board = JSON.parse(localStorage.getItem("geoLeaderboard")) || [];
+
+
+      board.push({ name: playerName, score: score });
+      board.sort((a, b) => b.score - a.score);
+
+
+      localStorage.setItem("geoLeaderboard", JSON.stringify(board.slice(0, 5)));
+    }
+
+
+    function displayLeaderboard() {
+      const board = JSON.parse(localStorage.getItem("geoLeaderboard")) || [];
+      const body = document.getElementById("leaderboard-body");
+
+
+      body.innerHTML = board
+        .map(
+          (entry, i) => `
+            <tr>
+              <td class="rank">#${i + 1}</td>
+              <td>${entry.name}</td>
+              <td>${entry.score}</td>
+            </tr>
+          `
+        )
+        .join("");
+    }
+  </script>
+</body>
+</html>
